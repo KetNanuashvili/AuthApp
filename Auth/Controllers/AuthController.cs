@@ -20,7 +20,7 @@ namespace Project.Controllers
             _tokenService = tokenService;
         }
 
-        // ✅ რეგისტრაცია (ღია ყველასთვის)
+        
         [AllowAnonymous]
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterDto dto)
@@ -46,7 +46,7 @@ namespace Project.Controllers
             return Ok("User registered successfully.");
         }
 
-        // ✅ ლოგინი (ღია ყველასთვის)
+   
         [AllowAnonymous]
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginDto dto)
