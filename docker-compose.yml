@@ -1,23 +1,14 @@
-version: "3.8"
-
 services:
-  auth:
-    build:
-      context: ./Auth
-      dockerfile: Dockerfile
+  auth-api:
+    build: ./Auth
     ports:
       - "5000:80"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
 
-  submit:
-    build:
-      context: ./Submit
-      dockerfile: Dockerfile
+  submit-api:
+    build: ./Submit
     ports:
       - "5001:80"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - AUTH_API_URL=http://auth  # ?? ?????? ????????? auth-?? ?????????
-    depends_on:
-      - auth

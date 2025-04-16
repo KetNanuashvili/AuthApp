@@ -1,7 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using System.Net.Http.Headers;
-using System.Net.Http.Json;
-using System.Threading.Tasks;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace Submit.Controllers
 {
@@ -10,66 +9,45 @@ namespace Submit.Controllers
     public class SubmitController : ControllerBase
     {
         private readonly SubmissionDbContext _context;
-        private readonly HttpClient _httpClient;
 
-        public SubmitController(SubmissionDbContext context, HttpClient httpClient)
+        public SubmitController(SubmissionDbContext context)
         {
             _context = context;
-            _httpClient = httpClient;
         }
 
+        [Authorize]
         [HttpPost]
-        public async Task<IActionResult> SubmitCode([FromBody] string code)
+        public async Task<IActionResult> SubmitCode([FromBody] SubmitDto dto)
         {
-            // Get the token from the Authorization header
-            var token = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
-            if (string.IsNullOrEmpty(token))
-            {
-                return Unauthorized("No token provided.");
-            }
-
-            // Fetch user data from Auth API
-            var userId = await GetUserFromAuthApiAsync(token);
-            if (string.IsNullOrEmpty(userId))
-            {
-                return Unauthorized("Invalid token.");
-            }
-
-            // Simulate score calculation
-            var score = new Random().Next(0, 101);
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userId == null) return Unauthorized();
 
             var submission = new CodeSubmission
             {
-                UserId = userId,  // Use the user ID from Auth API
-                Code = code,
-                Score = score,
+                UserId = userId,
+                Code = dto.Code,
+                Score = await CalculateScoreAsync(),
                 SubmissionDate = DateTime.UtcNow
             };
 
             _context.Submissions.Add(submission);
             await _context.SaveChangesAsync();
 
-            return Ok(new { Message = "Code submitted successfully", Score = score });
+            return Ok(submission);
         }
 
-        private async Task<string?> GetUserFromAuthApiAsync(string token)
+        private async Task<int> CalculateScoreAsync()
         {
-            try
-            {
-                _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-                var response = await _httpClient.GetAsync("https://your-auth-api.com/api/users/me");
+            var random = new Random();
 
-                if (response.IsSuccessStatusCode)
-                {
-                    var user = await response.Content.ReadFromJsonAsync<User>();  // Define User model
-                    return user?.Id;
-                }
-                return null;
-            }
-            catch
-            {
-                return null;
-            }
+            const int MillisecondsInOneMinute = 60_000;
+            const int MillisecondsInTwoMinutes = 120_000;
+
+            int delayInMilliseconds = random.Next(MillisecondsInOneMinute, MillisecondsInTwoMinutes);
+
+            await Task.Delay(delayInMilliseconds);
+
+            return random.Next(101);
         }
     }
 }
