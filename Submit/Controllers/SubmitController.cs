@@ -39,14 +39,8 @@ namespace Submit.Controllers
         private async Task<int> CalculateScoreAsync()
         {
             var random = new Random();
-
-            const int MillisecondsInOneMinute = 60_000;
-            const int MillisecondsInTwoMinutes = 120_000;
-
-            int delayInMilliseconds = random.Next(MillisecondsInOneMinute, MillisecondsInTwoMinutes);
-
-            await Task.Delay(delayInMilliseconds);
-
+            int delay = random.Next(60_000, 120_000);
+            await Task.Delay(delay);
             return random.Next(101);
         }
     }
